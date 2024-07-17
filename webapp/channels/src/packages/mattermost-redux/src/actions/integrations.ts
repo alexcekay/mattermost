@@ -1,6 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
+import type {AnyAction} from 'redux';
 import {batchActions} from 'redux-batched-actions';
 
 import type {Command, CommandArgs, DialogSubmission, IncomingWebhook, IncomingWebhooksWithCount, OAuthApp, OutgoingOAuthConnection, OutgoingWebhook, SubmitDialogResponse} from '@mattermost/types/integrations';
@@ -16,7 +17,6 @@ import {logError} from './errors';
 import {bindClientFunc, forceLogoutIfNecessary} from './helpers';
 
 import {General} from '../constants';
-import {AnyAction} from 'redux';
 
 export function createIncomingHook(hook: IncomingWebhook) {
     return bindClientFunc({
@@ -50,21 +50,21 @@ export function getIncomingHooks(teamId = '', page = 0, perPage: number = Genera
             return {error};
         }
 
-        let actions: AnyAction[] = [{
+        const actions: AnyAction[] = [{
             type: IntegrationTypes.RECEIVED_INCOMING_HOOKS,
-            data: includeTotalCount ? (data as IncomingWebhooksWithCount).incoming_webhooks : data
-        }]
+            data: includeTotalCount ? (data as IncomingWebhooksWithCount).incoming_webhooks : data,
+        }];
 
         if (includeTotalCount) {
             actions.push({
                 type: IntegrationTypes.RECEIVED_INCOMING_HOOKS_TOTAL_COUNT,
-                data: (data as IncomingWebhooksWithCount).total_count
-            })
+                data: (data as IncomingWebhooksWithCount).total_count,
+            });
         }
 
         dispatch(batchActions(actions));
         return {data};
-    }
+    };
 }
 
 export function removeIncomingHook(hookId: string): ActionFuncAsync {
