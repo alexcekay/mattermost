@@ -16,7 +16,7 @@ import {localizeMessage} from 'utils/utils';
 import './backstage_list.scss';
 
 type Props = {
-    children?: ReactNode | ((filter: string) => void);
+    children?: JSX.Element[] | ((filter: string) => [JSX.Element[], boolean]);
     header: ReactNode;
     addLink?: string;
     addText?: ReactNode;
@@ -58,15 +58,20 @@ const BackstageList = ({searchPlaceholder = localizeMessage('backstage_list.sear
     const updateFilter = (e: ChangeEvent<HTMLInputElement>) => setFilter(e.target.value);
     const filterLowered = filter.toLowerCase();
 
-    let children;
+    let children = [];
     let childCount = 0;
     if (remainingProps.loading) {
-        children = <LoadingScreen/>;
+        children = [
+            <LoadingScreen
+                key='loading'
+            />,
+        ];
     } else {
-        children = remainingProps.children;
         let hasChildren = true;
-        if (typeof children === 'function') {
-            [children, hasChildren] = children(filterLowered);
+        if (typeof remainingProps.children === 'function') {
+            [children, hasChildren] = remainingProps.children(filterLowered);
+        } else {
+            children = remainingProps.children as JSX.Element[];
         }
         children = React.Children.map(children, (child) => {
             return React.cloneElement(child, {filterLowered});
@@ -74,21 +79,25 @@ const BackstageList = ({searchPlaceholder = localizeMessage('backstage_list.sear
         if (children.length === 0 || !hasChildren) {
             if (!filterLowered) {
                 if (remainingProps.emptyText) {
-                    children = (
-                        <div className='backstage-list__item backstage-list__empty'>
+                    children = [(
+                        <div
+                            className='backstage-list__item backstage-list__empty'
+                            key='emptyText'
+                        >
                             {remainingProps.emptyText}
                         </div>
-                    );
+                    )];
                 }
             } else if (remainingProps.emptyTextSearch) {
-                children = (
+                children = [(
                     <div
                         className='backstage-list__item backstage-list__empty'
                         id='emptySearchResultsMessage'
+                        key='emptyTextSearch'
                     >
                         {React.cloneElement(remainingProps.emptyTextSearch, {values: {searchTerm: filterLowered}})}
                     </div>
-                );
+                )];
             }
         } else {
             childCount = children.length;
